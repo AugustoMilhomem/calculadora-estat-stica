@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Jogo do Bicho</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🐗 Calculadora Estatística - Jogo do Bicho</h1>
+
+    <label for="historico">Cole aqui os últimos resultados:</label>
+    <textarea id="historico" placeholder="Ex: 3245, 1398, 7744, 5021..." rows="6"></textarea>
+
+    <button onclick="analisarResultados()">🔍 Analisar</button>
+
+    <div id="resultado"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
