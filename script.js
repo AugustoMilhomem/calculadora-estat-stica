@@ -1,65 +1,51 @@
-const grupos = {
-    1: 'Avestruz', 2: 'Águia', 3: 'Burro', 4: 'Borboleta', 5: 'Cachorro',
-    6: 'Cabra', 7: 'Carneiro', 8: 'Camelo', 9: 'Cobra', 10: 'Coelho',
-    11: 'Cavalo', 12: 'Elefante', 13: 'Galo', 14: 'Gato', 15: 'Jacaré',
-    16: 'Leão', 17: 'Macaco', 18: 'Porco', 19: 'Pavão', 20: 'Peru',
-    21: 'Touro', 22: 'Tigre', 23: 'Urso', 24: 'Veado', 25: 'Vaca'
-  };
-  
-  function getGrupo(numero) {
-    const dezena = parseInt(numero.slice(-2));
-    return Math.ceil(dezena / 4) || 25;
-  }
-  
-  function calcular() {
-    const modo = document.getElementById("modoEntrada").value;
-    const texto = document.getElementById("historico").value.trim();
-    const entradas = texto.match(/\d{1,3}/g) || [];
-  
-    const freq = {}, lastSeen = {};
-    for (let i = 1; i <= 25; i++) {
-      freq[i] = 0;
-      lastSeen[i] = null;
-    }
-  
-    let peso = entradas.length;
-    entradas.forEach((valor, idx) => {
-      let grupo;
-  
-      if (modo === "numeros") {
-        if (valor.length < 2) return; // ignora entradas muito pequenas
-        grupo = getGrupo(valor);
-      } else if (modo === "grupos") {
-        grupo = parseInt(valor);
-        if (grupo < 1 || grupo > 25) return;
-      }
-  
-      freq[grupo] += peso;
-      if (lastSeen[grupo] === null) lastSeen[grupo] = idx;
-      peso--;
-    });
-  
-    const pontuacoes = Object.keys(grupos).map(g => {
-      const freqVal = freq[g];
-      const ausencia = lastSeen[g] !== null ? entradas.length - lastSeen[g] : entradas.length;
-      const score = freqVal * 1 + ausencia * 2;
-      return { grupo: g, nome: grupos[g], freq: freqVal, ausencia, score };
-    });
-  
-    const ordenado = pontuacoes.sort((a, b) => b.score - a.score);
-    const top3 = ordenado.slice(0, 3);
-    const menos5 = pontuacoes.sort((a, b) => a.freq - b.freq).slice(0, 5);
-  
-    let resultado = `🔮 <strong>Sugestões com base em estatísticas:</strong><br>`;
-    top3.forEach((g, i) => {
-      resultado += `#${i + 1} → Grupo ${g.grupo} (${g.nome}) - Score: ${g.score}<br>`;
-    });
-  
-    resultado += `<br>📉 <strong>Grupos Menos Frequentes:</strong><br>`;
-    menos5.forEach(g => {
-      resultado += `Grupo ${g.grupo} (${g.nome}) → ${g.freq}x<br>`;
-    });
-  
-    document.getElementById("resultado").innerHTML = resultado;
-  }
-  
+// script.js
+
+const grupos = [
+  "Avestruz", "Águia", "Burro", "Borboleta", "Cachorro", "Cabra", "Carneiro", "Camelo",
+  "Cobra", "Coelho", "Cavalo", "Elefante", "Galo", "Gato", "Jacaré", "Leão", "Macaco",
+  "Porco", "Pavão", "Peru", "Touro", "Tigre", "Urso", "Veado", "Vaca"
+];
+
+function analisarResultados() {
+  const input = document.getElementById("inputResultados").value.trim();
+  const numeros = input.split(/[,\s]+/).map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 25);
+
+  const contagem = Array(25).fill(0);
+  numeros.forEach(n => contagem[n - 1]++);
+
+  const gruposOrdenados = contagem
+    .map((qtd, idx) => ({ grupo: idx + 1, nome: grupos[idx], qtd }))
+    .sort((a, b) => b.qtd - a.qtd);
+
+  const top5 = gruposOrdenados.slice(0, 5);
+  const menos5 = gruposOrdenados.filter(g => g.qtd > 0).slice(-5);
+  const ausentes = gruposOrdenados.filter(g => g.qtd === 0);
+
+  document.getElementById("frequentes").innerHTML = `🔝 <strong>Top 5 Grupos Mais Frequentes:</strong><br>` +
+    top5.map(g => `Grupo ${g.grupo} (${g.nome}) → ${g.qtd}x`).join("<br>");
+
+  document.getElementById("ausentes").innerHTML = `📉 <strong>Grupos Menos Frequentes:</strong><br>` +
+    menos5.map(g => `Grupo ${g.grupo} (${g.nome}) → ${g.qtd}x`).join("<br>");
+
+  document.getElementById("sugestoes").innerHTML = `💡 <strong>Sugestão:</strong> Fique de olho no grupo ${top5[0].grupo} (${top5[0].nome}), que está em alta!`;
+
+  gerarSugestoesInteligentes(top5, menos5, ausentes);
+}
+
+function gerarSugestoesInteligentes(top5, menos5, ausentes) {
+  const dezenas = top5.map(g => `${(g.grupo - 1) * 4 + 1}-${g.grupo * 4}`);
+  const centenas = dezenas.map(dz => dz.split("-").map(n => `${n.padStart(2, '0')}0`));
+  const milhares = centenas.map(c => c.map(n => `1${n}`));
+  const terno = top5.slice(0, 3).map(g => `Grupo ${g.grupo} (${g.nome})`).join(" + ");
+
+  document.getElementById("sugestoesGrupos").innerHTML = `<strong>Grupos em Alta:</strong><br>` + top5.map(g => `Grupo ${g.grupo} (${g.nome})`).join("<br>");
+
+  document.getElementById("sugestoesDezenas").innerHTML = `<strong>Dezenas Prováveis:</strong><br>` + dezenas.join("<br>");
+
+  document.getElementById("sugestoesCentenas").innerHTML = `<strong>Centenas Prováveis:</strong><br>` + centenas.flat().join(", ");
+
+  document.getElementById("sugestoesMilhares").innerHTML = `<strong>Milhares Prováveis:</strong><br>` + milhares.flat().join(", ");
+
+  document.getElementById("sugestoesTerno").innerHTML = `<strong>Terno de Grupo:</strong><br>${terno}`;
+}
+
